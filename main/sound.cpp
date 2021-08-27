@@ -203,25 +203,26 @@ static void pwm_thread(void *arg)
                 }
                 else
                 {
+                        auto this_freq = freq;
                         for (;;time_point = esp_timer_get_time() - last_time_since_tone_change)
                         {
                                 TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
                                 TIMERG0.wdt_feed = 1;
                                 TIMERG0.wdt_wprotect = 0;
 
-                                double wave_T = 1000000.0 / freq;
+                                double wave_T = 1000000.0 / this_freq;
 
-                                float duty_cycle = sin((time_point / wave_T) * 3.1415926535897932384626) / 2;
+                                float pcm = sin((time_point / wave_T) * 2 * 3.1415926535897932384626) / 2;
 
-                                duty_cycle /= 3;
+                                pcm /= 3;
 
                                // ESP_LOGI(TAG, "duty %f, freq %f", duty_cycle, freq);
-                                mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, duty_cycle * 50 + 50 );
-                                mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 50 - duty_cycle * 50 );
+                                mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, pcm * 50 + 50 );
+                                mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 50 - pcm * 50 );
 
                                 if ( time_point >= wave_T)
                                 {
-                                        if ( abs(duty_cycle) < 0.03)
+                                        if ( abs(pcm) < 0.03)
                                                 break;                                        
                                 }
                         }
